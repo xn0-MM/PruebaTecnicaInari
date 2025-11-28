@@ -135,9 +135,10 @@ Feature: Purchase products on the demo store
 - Goal: pipeline fails when tests fail and produces a publishable report.
 - Strategy:
   - PRs: fast smoke in Chrome (`npm run cy:smoke -- --browser chrome`), no Pages publication.
-  - `main`/schedule: regression suite runs in parallel per browser (Chrome + Firefox), reports merged and published to GitHub Pages.
+  - `main`/`develop`/schedule: regression suite runs in parallel per browser (Chrome + Firefox), reports merged and published to GitHub Pages.
   - Artifacts: HTML report in `docs/report/index.html` (inline assets). Screenshots/videos can be enabled in Cypress if desired.
   - Retries: keep low (0-2); fix flakiness instead of hiding it.
+  - Branch model: `main` -> `develop` -> `feature/*`; CI runs smoke on PRs into develop/main, full regression on pushes to develop/main, and scheduled nightly to catch drift.
 - Cache `node_modules` based on `package-lock.json` to speed up.
 - Install with `npm ci` in CI.
 - Example GitHub Actions workflow:
@@ -145,9 +146,9 @@ Feature: Purchase products on the demo store
 name: e2e-report
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: ["**"]
+    branches: [main, develop]
   schedule:
     - cron: '0 3 * * *' # daily
   workflow_dispatch:
