@@ -1,4 +1,3 @@
-// cypress.config.ts
 import { defineConfig } from 'cypress';
 import cypressMochawesomeReporter from 'cypress-mochawesome-reporter/plugin';
 import { plugin as registerGrep } from '@cypress/grep/plugin';

@@ -1,4 +1,3 @@
-// cypress/support/actions/cart.actions.ts
 import { selectors } from '../selectors';
 
 export function addProductToCartByName(productName: string) {

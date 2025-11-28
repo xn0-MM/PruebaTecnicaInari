@@ -11,7 +11,6 @@ declare global {
 }
 
 
-// cypress/support/commands.ts
 Cypress.Commands.add('login', (username: string, password: string) => {
     loginWith(username, password);
     cy.visit('/?/inventory.html');
