@@ -1,0 +1,90 @@
+name: e2e-report
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: ["**"]
+  schedule:
+    - cron: '0 3 * * *' # daily at 03:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm ci
+      - name: Run smoke (headless, chrome)
+        run: npm run cy:smoke -- --browser chrome
+
+  test:
+    if: github.event_name != 'pull_request'
+    strategy:
+      matrix:
+        browser: [chrome, firefox]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm ci
+      - name: Clean previous reports
+        run: rm -rf docs/report
+      - name: Run tests (${{ matrix.browser }})
+        run: npm run cy:report:raw -- --browser ${{ matrix.browser }} -- --env grepTags=@regression
+      - name: Upload raw report (${{ matrix.browser }})
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-${{ matrix.browser }}
+          path: docs/report/raw
+
+  merge:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm ci
+      - run: rm -rf docs/report
+      - name: Download raw reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: report-*
+          path: docs/report/raw
+          merge-multiple: true
+      - name: Merge reports (all browsers)
+        run: npm run cy:merge-report
+      - name: Upload report artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: merge
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4.0.5
