@@ -1,0 +1,41 @@
+{
+  "name": "pruebatecnicainari",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "cy:smoke": "cypress run --env grepTags=@smoke",
+    "cy:regression": "cypress run --env grepTags=@regression",
+    "cy:run:all": "npm run cy:run -- --browser chrome && npm run cy:run -- --browser firefox && npm run cy:run -- --browser electron",
+    "cy:smoke:all": "npm run cy:smoke -- --browser chrome && npm run cy:smoke -- --browser firefox && npm run cy:smoke -- --browser electron",
+    "cy:regression:all": "npm run cy:regression -- --browser chrome && npm run cy:regression -- --browser firefox && npm run cy:regression -- --browser electron",
+    "cy:report:raw": "cypress run --reporter cypress-mochawesome-reporter",
+    "cy:merge-report": "mochawesome-merge docs/report/raw/*.json -o docs/report/report.json && marge docs/report/report.json --reportDir docs/report --reportFilename index.html --inline --charts --overwrite",
+    "cy:report": "npm run cy:report:raw && npm run cy:merge-report"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xn0-MM/PruebaTecnicaInari.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/xn0-MM/PruebaTecnicaInari/issues"
+  },
+  "homepage": "https://github.com/xn0-MM/PruebaTecnicaInari#readme",
+  "devDependencies": {
+    "@cypress/grep": "^5.0.0",
+    "@types/node": "^24.10.1",
+    "cypress": "^15.7.0",
+    "cypress-mochawesome-reporter": "^3.6.0",
+    "mochawesome-merge": "^4.3.0",
+    "mochawesome-report-generator": "^6.3.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {}
+}
