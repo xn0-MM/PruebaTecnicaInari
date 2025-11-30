@@ -8,7 +8,11 @@ import {
 } from '../support/actions/checkout.actions';
 import { CheckoutFixtureData } from '../support/types';
 
-describe('Full buying process - Saucedemo', () => {
+const suitePrefix = Cypress.browser?.displayName
+  ? `[${Cypress.browser.displayName}] `
+  : '';
+
+describe(`${suitePrefix} Full buying process - Saucedemo`, () => {
   let testData: CheckoutFixtureData;
 
   before(() => {
@@ -32,14 +36,14 @@ describe('Full buying process - Saucedemo', () => {
       checkoutWithRequiredFields(
         testData.checkout.firstName,
         testData.checkout.lastName,
-      testData.checkout.postalCode,
-    );
+        testData.checkout.postalCode,
+      );
 
-    assertCheckoutSummaryInfo({
-      productName: testData.product.name,
-      paymentInfo: testData.checkout.paymentInfo,
-      shippingInfo: testData.checkout.shippingInfo,
-    });
+      assertCheckoutSummaryInfo({
+        productName: testData.product.name,
+        paymentInfo: testData.checkout.paymentInfo,
+        shippingInfo: testData.checkout.shippingInfo,
+      });
 
       assertPriceCalculationMatches();
 
