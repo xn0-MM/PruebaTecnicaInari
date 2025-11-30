@@ -47,13 +47,15 @@ jobs:
       - name: Collect mochawesome JSON
         run: |
           find cypress -type f -name "mochawesome*.json" -print -exec cp {} docs/report/raw/ \;
+          shopt -s nullglob
+          for f in docs/report/raw/*.json; do mv "$f" "docs/report/raw/${{ matrix.browser }}-${f##*/}"; done
           ls -la docs/report/raw
-          test -n "$(ls -1 docs/report/raw/*.json 2>/dev/null)"
+          test -n "$(ls -1 docs/report/raw/${{ matrix.browser }}-*.json 2>/dev/null)"
       - name: Upload raw report (${{ matrix.browser }})
         uses: actions/upload-artifact@v4
         with:
           name: report-${{ matrix.browser }}
-          path: docs/report/raw/*.json
+          path: docs/report/raw/${{ matrix.browser }}-*.json
           if-no-files-found: error
 
   merge:

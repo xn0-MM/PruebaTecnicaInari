@@ -12,7 +12,7 @@
     "cy:smoke:all": "npm run cy:smoke -- --browser chrome && npm run cy:smoke -- --browser firefox && npm run cy:smoke -- --browser electron",
     "cy:regression:all": "npm run cy:regression -- --browser chrome && npm run cy:regression -- --browser firefox && npm run cy:regression -- --browser electron",
     "cy:report:raw": "cypress run --reporter cypress-mochawesome-reporter --reporter-options reportDir=docs/report/raw,overwrite=false,html=false,json=true,saveJson=true",
-    "merge:reports": "mochawesome-merge docs/report/raw/*.json -o docs/report/report.json",
+    "merge:reports": "mochawesome-merge \"docs/report/raw/**/*.json\" -o docs/report/report.json",
     "clean:reports": "node -e \"const fs=require('fs');const p='docs/report/report.json';const d=JSON.parse(fs.readFileSync(p,'utf8'),(k,v)=>k==='isRoot'?undefined:v);fs.writeFileSync(p,JSON.stringify(d));\"",
     "html:report": "marge docs/report/report.json --reportDir docs/report --reportFilename index.html --inline --charts --overwrite",
     "cy:merge-report": "npm run merge:reports && npm run clean:reports && npm run html:report",
