@@ -1,0 +1,16 @@
+{
+  "user": {
+    "username": "standard_user",
+    "password": "secret_sauce"
+  },
+  "product": {
+    "name": "Sauce Labs Backpack"
+  },
+  "checkout": {
+    "firstName": "Sebastian",
+    "lastName": "Moreno",
+    "postalCode": "28001",
+    "paymentInfo": "SauceCard #31337",
+    "shippingInfo": "Free Pony Express Delivery!"
+  }
+}
