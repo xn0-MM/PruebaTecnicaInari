@@ -44,6 +44,10 @@ jobs:
         run: rm -rf docs/report && mkdir -p docs/report/raw
       - name: Run tests (${{ matrix.browser }})
         run: npm run cy:report:raw -- --browser ${{ matrix.browser }} --env grepTags=@regression
+      - name: Collect mochawesome artifacts
+        run: |
+          find . -type f -name "mochawesome*.json" -print -exec cp {} docs/report/raw/ \;
+          ls -la docs/report/raw
       - name: Upload raw report (${{ matrix.browser }})
         uses: actions/upload-artifact@v4
         with:
