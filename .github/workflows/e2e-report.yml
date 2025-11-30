@@ -41,14 +41,15 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Clean previous reports
-        run: rm -rf docs/report
+        run: rm -rf docs/report && mkdir -p docs/report/raw
       - name: Run tests (${{ matrix.browser }})
-        run: npm run cy:report:raw -- --browser ${{ matrix.browser }} -- --env grepTags=@regression
+        run: npm run cy:report:raw -- --browser ${{ matrix.browser }} --env grepTags=@regression
       - name: Upload raw report (${{ matrix.browser }})
         uses: actions/upload-artifact@v4
         with:
           name: report-${{ matrix.browser }}
-          path: docs/report/raw
+          path: docs/report/raw/*.json
+          if-no-files-found: error
 
   merge:
     needs: test
