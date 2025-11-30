@@ -44,8 +44,9 @@ jobs:
         run: rm -rf docs/report && mkdir -p docs/report/raw
       - name: Run tests (${{ matrix.browser }})
         run: npm run cy:report:raw -- --browser ${{ matrix.browser }} --env grepTags=@regression
-      - name: Check generated reports
+      - name: Collect mochawesome JSON
         run: |
+          find cypress -type f -name "mochawesome*.json" -print -exec cp {} docs/report/raw/ \;
           ls -la docs/report/raw
           test -n "$(ls -1 docs/report/raw/*.json 2>/dev/null)"
       - name: Upload raw report (${{ matrix.browser }})

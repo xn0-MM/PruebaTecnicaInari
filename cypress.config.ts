@@ -13,6 +13,7 @@ export default defineConfig({
     overwrite: false,
     html: false,
     json: true,
+    saveJson: true,
   },
   e2e: {
     baseUrl: 'https://www.saucedemo.com',
