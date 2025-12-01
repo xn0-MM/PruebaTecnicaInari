@@ -1,6 +1,6 @@
 # PruebaTecnicaInari
 
-QA project (manual + automation) on https://www.saucedemo.com.
+QA project (manual + automation) on https://www.saucedemo.com. Latest report: https://xn0-mm.github.io/PruebaTecnicaInari/
 
 ## Automation stack
 - Cypress 15 + TypeScript; `baseUrl` set in `cypress.config.ts`.
@@ -149,7 +149,7 @@ Feature: Purchase products on the demo store
 - Current:
   - Triggers: push/PR to `main`/`develop`, manual dispatch, daily cron 03:00 UTC.
   - Jobs: smoke on PRs (Chrome); regression on `main`/`develop` and scheduled (Chrome + Firefox matrix).
-  - Artifacts: each browser uploads its mochawesome JSON; merge job downloads all, cleans/merges, builds `docs/report/index.html`, uploads Pages artifact; `main` deploys to GitHub Pages.
+  - Artifacts: each browser uploads its mochawesome JSON; merge job downloads all, cleans/merges, builds `docs/report/index.html`, uploads Pages artifact; `main` deploys to GitHub Pages at https://xn0-mm.github.io/PruebaTecnicaInari/.
 - Future hardening:
   - Add lint/type-check gates and unit/component tests before E2E.
   - Enforce smoke as required on PRs; block deploy on main/release with full regression matrix.
