@@ -1,41 +1,54 @@
 # PruebaTecnicaInari
 
-QA technical test (manual + automation) on https://www.saucedemo.com.
+QA project (manual + automation) on https://www.saucedemo.com. Latest report: https://xn0-mm.github.io/PruebaTecnicaInari/
 
-## Stack (automation)
-- Cypress 15 + TypeScript; baseUrl set to `https://www.saucedemo.com` in `cypress.config.ts`.
+## Automation stack
+- Cypress 15 + TypeScript; `baseUrl` set in `cypress.config.ts`.
 - Node 18+ recommended.
-- Custom commands and action helpers centralize flows (`cypress/support/commands.ts`, `cypress/support/actions/*`).
-- Fixtures hold test data (`cypress/fixtures/checkout-data.json`).
-- Reporter: `cypress-mochawesome-reporter` outputs raw JSON to `docs/report/raw`; merged HTML is produced with `mochawesome-merge` + `marge` into `docs/report` (ready for GitHub Pages).
+- Reporter: `cypress-mochawesome-reporter` + `mochawesome-merge` + `marge` (HTML) with always-on screenshots and browser prefix in suite titles.
+- Tag filtering with `@cypress/grep`.
+- Reusable flows in `cypress/support/actions/*` and custom commands in `cypress/support/commands.ts`.
+- Test data in fixtures (`cypress/fixtures/checkout-data.json`).
 
-### Install and run
-1) `npm install`
-2) UI runner: `npm run cy:open`
-3) Headless: `npm run cy:run`
-4) Headless + HTML report (merged in `docs/report`): `npm run cy:report`
-- Smoke only: `npm run cy:smoke`
-- Regression only: `npm run cy:regression`
-- Smoke all (Chrome + Firefox + Electron): `npm run cy:smoke:all`
-- Regression all (Chrome + Firefox + Electron): `npm run cy:regression:all`
-- Cross-browser locally: add `--browser chrome|firefox` to `cy:report:raw` (for example, `npm run cy:report:raw -- --browser firefox`) and then merge with `npm run cy:merge-report`.
-  - Note: Cypress supports Chrome-family, Firefox, and Electron; Safari/WebKit is not supported.
+## Install & run locally
+1. `npm install`
+2. UI runner: `npm run cy:open`
+3. Headless:
+   - Default: `npm run cy:run`
+   - Smoke: `npm run cy:smoke`
+   - Regression: `npm run cy:regression`
+   - Cross-browser: add `--browser chrome|firefox|electron` to any script, or use `cy:*:all` for chrome+firefox+electron.
+4. Mochawesome reports:
+   - JSON: `npm run cy:report:raw`
+   - Merge + clean + HTML: `npm run cy:merge-report`
+   - All-in-one: `npm run cy:report`
+   - Output: JSON under `docs/report/raw`, final HTML at `docs/report/index.html` (includes screenshots).
 
-### Project layout (automation)
-- `cypress/e2e/full-checkout.cy.ts`: automated scenarios (happy path checkout + checkout form validation).
-- `cypress/support/actions/*.ts`: reusable interactions for login, cart, and checkout.
-- `cypress/support/commands.ts`: custom commands (`cy.login`, `cy.addProductAndGoToCart`).
-- `cypress/support/selectors.ts`: central locators.
-- `cypress/support/utils.ts`: helpers (amount parsing).
-- `cypress/fixtures/checkout-data.json`: input data.
-- `cypress.config.ts`: Cypress configuration.
-- `docs/report/raw`: raw JSON reports from Cypress runs.
-- `docs/report`: merged HTML report output (inline assets) when running `npm run cy:report`.
+## Project structure
+- `cypress/e2e/full-checkout.cy.ts`: E2E (full checkout + validations) with browser-prefixed suite title.
+- `cypress/support/actions/*.ts`: helpers for login, cart, checkout.
+- `cypress/support/commands.ts`: commands (`cy.login`, `cy.addProductAndGoToCart`).
+- `cypress/support/e2e.ts`: global hooks, grep, mochawesome context, screenshots after each test.
+- `cypress/support/selectors.ts`: locators.
+- `cypress/fixtures/checkout-data.json`: test data.
+- `docs/report`: mochawesome artifacts (HTML + JSON).
 
-## Design philosophy
-- Follow Cypress guidance: avoid heavy Page Object Models; keep selectors centralized and expose behaviors via lightweight action helpers and custom commands when logic repeats across tests.
-- Keep specs readable and intention-revealing; assertions stay close to the actions they verify.
-- Use fixtures for deterministic data; prefer configuration/env vars over hardcoded secrets.
+## CI/CD (GitHub Actions)
+- Workflow: `.github/workflows/e2e-report.yml`.
+- Triggers: `push`/`pull_request` to `main` and `develop`, manual dispatch, daily cron 03:00 UTC.
+- Jobs:
+  - `smoke` (PR only): Chrome, `npm ci`, `npm run cy:smoke -- --browser chrome`.
+  - `test` (non-PR): matrix `browser: [chrome, firefox]`, cleans `docs/report`, runs `npm run cy:report:raw`, prefixes JSON with browser, uploads artifacts.
+  - `merge`: downloads artifacts, merges all JSON, removes `isRoot`, builds `docs/report/index.html`, uploads for Pages.
+  - `deploy` (main only): publishes `docs/report` to GitHub Pages.
+- Reports: GitHub Pages hosts the latest merged report; each test shows browser, tags, duration, ENV, and screenshot path.
+
+## Design & quality
+- Keep specs readable; move logic to helpers/commands, avoid heavy POMs.
+- Centralize selectors; keep data in fixtures.
+- Use tags in titles (`@smoke`, `@regression`, `@negative`, etc.) and filter with `grepTags`.
+- Always capture screenshots (afterEach) for visual evidence in reports.
+- Static quality: use linters/formatters and tools like SonarLint to catch smells/vulnerabilities during editing.
 
 ## Part 1 - Manual QA
 ### Test case table
@@ -43,10 +56,10 @@ QA technical test (manual + automation) on https://www.saucedemo.com.
 | Test Case ID | Test Case Name                                        | Precondition                                                                                       | Steps                                                                                                                                                         | Expected Result                                                                                                                                                                      | Priority | Type                               |
 |--------------|-------------------------------------------------------|----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|------------------------------------|
 | TC01         | Successful login with valid credentials               | User is on the login page and valid credentials are available (standard_user / secret_sauce).      | 1. Open the demo application login page. 2. Enter `standard_user` in the Username field. 3. Enter `secret_sauce` in the Password field. 4. Click **Login**.    | - User is authenticated. - Redirected to the product listing (inventory) page. - Product list is displayed. - No login error message is shown.                                        | High     | Functional - Positive, Smoke       |
-| TC02         | Login with valid username and invalid password        | User is on the login page.                                                                         | 1. Open the demo application login page. 2. Enter `standard_user` in the Username field. 3. Enter an invalid password (e.g. `wrong_password`). 4. Click **Login**. | - Login is rejected. - User remains on the login page. - Error message shown indicating username and password do not match. - User is not redirected to the product listing page.      | Medium   | Functional - Negative, Validation  |
+| TC02         | Login with valid username and invalid password        | User is on the login page.                                                                         | 1. Open the demo application login page. 2. Enter `standard_user` in the Username field. 3. Enter an invalid password (e.g. `wrong_password`). 4. Click **Login**. | - Login is rejected. - User remains on the login page. - Error message shown: **“Epic sadface: Username and password do not match any user in this service.”** - User is not redirected to the product listing page. | Medium   | Functional - Negative, Validation  |
 | TC03         | Add two products to the cart                          | User is logged in with valid credentials (TC01 passed) and is on the product listing page.         | 1. On the inventory page, identify Product A. 2. Click **Add to cart** for Product A. 3. Identify Product B. 4. Click **Add to cart** for Product B. 5. Check the cart badge. | - Both products are added. - Cart badge shows **2**. - Buttons change to **Remove** for those products. - No error message is displayed.                                               | High     | Functional - Positive              |
 | TC04         | Proceed to checkout with customer information entered | User is logged in (standard_user / secret_sauce) and has exactly two products in the cart (TC03).  | 1. Click the cart icon to open the cart page. 2. Verify exactly two products in the cart. 3. Click **Checkout**. 4. Enter First Name. 5. Enter Last Name. 6. Enter Postal Code. 7. Click **Continue**. | - Checkout "your information" form is submitted. - Redirected to checkout overview page with order summary. - No validation errors for First Name, Last Name, or Postal Code. | High     | Functional - Positive, Data Entry  |
-| TC05         | Validate total price equals sum of selected products  | User is on the checkout overview page with two selected products displayed (TC04 passed).          | 1. On checkout overview, note price of Product A. 2. Note price of Product B. 3. Calculate their sum. 4. Compare with **Item total**. 5. Note **Tax**. 6. Check **Total**. | - **Item total** equals sum of Product A + Product B. - **Total** equals **Item total + Tax** per app logic. - No hidden items or unexpected extra charges.                             | High     | Functional - Business Logic, Calculation |
+| TC05         | Validate total price equals sum of selected products  | User is on the checkout overview page with two selected products displayed (TC04 passed).          | 1. On checkout overview, note price of Product A. 2. Note price of Product B. 3. Calculate their sum. 4. Compare with **Item total**. 5. Note **Tax**. 6. Check **Total**. | - **Item total** equals sum of Product A + Product B. - **Total** equals **Item total + Tax** per app logic.                   | High     | Functional - Business Logic, Calculation |
 | TC06         | Complete checkout successfully                        | User is on the checkout overview page with totals already verified (TC05 passed).                  | 1. On checkout overview page, click **Finish**. 2. Wait for navigation. 3. Observe resulting page header and message. 4. Optionally, check cart badge is cleared when returning. | - Checkout completes. - Confirmation/thank-you page shown. - No error messages. - Cart is cleared (no items after completion, if supported).                                          | High     | Functional - Positive, E2E         |
 
 Notes:
@@ -123,104 +136,26 @@ Feature: Purchase products on the demo store
 - Checkout form required fields: negative validation on the checkout information page (empty, then missing last name, then missing postal code).
 - Test data lives in `cypress/fixtures/checkout-data.json`; adjust there to change user or checkout info.
 
-## How to scale the test project
-- Cypress-style architecture without POMs: single source of truth for locators (`cypress/support/selectors.ts`) and thin action helpers/custom commands to reuse flows (e.g., login, add to cart, checkout info) across specs.
-- Custom commands for common preconditions (e.g., `cy.login`, `cy.addProductAndGoToCart`) keep specs concise and reduce duplication.
-- Environment variables for credentials/base URLs; use Cypress config files or `CYPRESS_*` env vars for secrets in CI.
-- Test data strategy: fixtures for static data; factories or API setup for dynamic data if the app allows it.
-- Tagging strategy: keep Gherkin-like tags (`@TCxx`, `@smoke`, `@negative`) in spec titles or via Cypress grep plugins to filter runs (smoke vs full regression).
-- Quality gates: lint, type-check, fast smoke suite per PR; full suite on main/nightly.
+## Additional points
 
-## CI/CD integration (example)
-- Goal: pipeline fails when tests fail and produces a publishable report.
-- Strategy:
-  - PRs: fast smoke in Chrome (`npm run cy:smoke -- --browser chrome`), no Pages publication.
-  - `main`/`develop`/schedule: regression suite runs in parallel per browser (Chrome + Firefox), reports merged and published to GitHub Pages.
-  - Artifacts: HTML report in `docs/report/index.html` (inline assets). Screenshots/videos can be enabled in Cypress if desired.
-  - Retries: keep low (0-2); fix flakiness instead of hiding it.
-  - Branch model: `main` -> `develop` -> `feature/*`; CI runs smoke on PRs into develop/main, full regression on pushes to develop/main, and scheduled nightly to catch drift.
-- Cache `node_modules` based on `package-lock.json` to speed up.
-- Install with `npm ci` in CI.
-- Example GitHub Actions workflow:
-```yaml
-name: e2e-report
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
-  schedule:
-    - cron: '0 3 * * *' # daily
-  workflow_dispatch:
-jobs:
-  smoke:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: npm
-      - run: npm ci
-      - run: npm run cy:smoke -- --browser chrome
+### How to scale the test project
+- Cypress-style architecture without heavy POMs: single source of truth for locators (`cypress/support/selectors.ts`) and thin action helpers/custom commands for reusable flows.
+- Custom commands for common preconditions (e.g., `cy.login`, `cy.addProductAndGoToCart`) keep specs concise.
+- Use env vars/config for credentials and URLs; prefer `CYPRESS_*` env vars in CI.
+- Fixtures for static data. Factories/API setup for dynamic data.
+- Tagging strategy: keep Gherkin-like tags (`@TCxx`, `@smoke`, `@negative`) in spec titles or via grep to filter runs.
 
-  test:
-    if: github.event_name != 'pull_request'
-    strategy:
-      matrix:
-        browser: [chrome, firefox]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: npm
-      - run: npm ci
-      - run: rm -rf docs/report
-      - run: npm run cy:report:raw -- --browser ${{ matrix.browser }} -- --env grepTags=@regression
-      - name: Upload raw report
-        uses: actions/upload-artifact@v4
-        with:
-          name: report-${{ matrix.browser }}
-          path: docs/report/raw
-
-  merge:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: npm
-      - run: npm ci
-      - run: rm -rf docs/report
-      - name: Download raw reports
-        uses: actions/download-artifact@v4
-        with:
-          pattern: report-*
-          path: docs/report/raw
-          merge-multiple: true
-      - run: npm run cy:merge-report
-      - name: Upload report artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: docs
-
-  deploy:
-    if: github.ref == 'refs/heads/main'
-    needs: merge
-    permissions:
-      pages: write
-      id-token: write
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-```
+### CI/CD integration
+- Current:
+  - Triggers: push/PR to `main`/`develop`, manual dispatch, daily cron 03:00 UTC.
+  - Jobs: smoke on PRs (Chrome); regression on `main`/`develop` and scheduled (Chrome + Firefox matrix).
+  - Artifacts: each browser uploads its mochawesome JSON; merge job downloads all, cleans/merges, builds `docs/report/index.html`, uploads Pages artifact; `main` deploys to GitHub Pages at https://xn0-mm.github.io/PruebaTecnicaInari/.
+- Future hardening:
+  - Add lint/type-check gates and unit/component tests before E2E.
+  - Enforce smoke as required on PRs; block deploy on main/release with full regression matrix.
+  - Use retries plus a "quarantine" tag for flakies.
+  - Shard specs and parallelize by browser.
+  - Publish screenshots/videos as artifacts; auto-comment PRs with failing specs and report link.
+  - Slack/Teams alerts on failures; coverage/Sonar gates.
+  - `workflow_dispatch` inputs to pick env/suite.
+  - Retain historical reports (bucket or longer Pages retention).
